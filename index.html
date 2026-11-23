@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EK TechBoard · Edilkamin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ed1b24'/%3E%3Cpath fill='%23fff' d='M16 5c1.2 5 6 7.500 6 13a6 6 0 0 1-12 0c0-2.600 1.300-4 2.600-5.200.2 2.200 1 3.200 2.200 3.600C14.200 12.800 14 9.400 16 5z'/%3E%3C/svg%3E">
+<!-- EK TechBoard — versione interna 1.4.1 (Supabase) -->
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f4f4f2; --surface:#fcfcfb; --surface-2:#f0efec; --line:#e2e1dc; --line-2:#cfcec7;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#7a7974;
+  --accent:#2a78d6; --accent-ink:#fff; --accent-soft:#e6f0fc;
+  --s-open:#eb6834; --s-prog:#eda100; --s-done:#008300;
+  --s-open-soft:#fdeee8; --s-prog-soft:#fdf3d9; --s-done-soft:#e3f3e3;
+  --danger:#c62f2f; --shadow:0 8px 30px rgba(0,0,0,.16);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#121211; --surface:#1a1a19; --surface-2:#232321; --line:#2e2e2b; --line-2:#44443f;
+    --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#928f86;
+    --accent:#3987e5; --accent-ink:#0b0b0b; --accent-soft:#17283d;
+    --s-open:#d95926; --s-prog:#c98500; --s-done:#0ca30c;
+    --s-open-soft:#33201a; --s-prog-soft:#302609; --s-done-soft:#12281a;
+    --danger:#e66767; --shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+header.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;padding:10px 24px;flex-wrap:wrap}
+header.top h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.1px}
+header.top h1 small{font-weight:400;color:var(--ink-3);margin-left:8px;font-size:12px}
+nav.tabs{display:flex;gap:4px}
+nav.tabs button{background:none;border:0;padding:8px 14px;border-radius:8px;cursor:pointer;color:var(--ink-2);font-weight:550}
+nav.tabs button[aria-selected=true]{background:var(--accent-soft);color:var(--accent)}
+.sp{flex:1}
+.btn{border:1px solid var(--line-2);background:var(--surface);padding:7px 13px;border-radius:8px;cursor:pointer;font-weight:550}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:default}
+main{max-width:1280px;margin:0 auto;padding:20px 24px 60px}
+.hidden{display:none!important}
+.status-line{color:var(--ink-3);font-size:12px;margin-bottom:12px}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .l{color:var(--ink-2);font-size:12px;display:flex;align-items:center;gap:6px}
+.kpi .v{font-size:30px;font-weight:650;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:13px;font-weight:450;color:var(--ink-3);margin-left:4px}
+.kpi .h{color:var(--ink-3);font-size:11.5px;margin-top:2px}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h3{margin:0 0 2px;font-size:14px;font-weight:650}
+.card .sub{color:var(--ink-3);font-size:12px;margin-bottom:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin:8px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.stack{display:flex;height:22px;gap:2px}
+.stack>div{border-radius:4px;min-width:2px}
+.hbars{display:flex;flex-direction:column;gap:7px}
+.hrow{display:grid;grid-template-columns:128px 1fr 38px;gap:10px;align-items:center;font-size:12.5px}
+.hrow .n{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .t{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hrow .bar{display:flex;gap:2px;height:14px}
+.hrow .bar>div{border-radius:0 4px 4px 0;min-width:3px}
+.hrow .bar>div:first-child{border-radius:0 4px 4px 0}
+.empty{color:var(--ink-3);padding:14px 0;font-size:13px}
+table{width:100%;border-collapse:collapse}
+th{font-weight:550;color:var(--ink-2);text-align:left;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover{background:var(--surface-2)}
+td.num{font-variant-numeric:tabular-nums;color:var(--ink-3)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:550;white-space:nowrap}
+.chip.Aperta{background:var(--s-open-soft)} .chip.Aperta .dot{background:var(--s-open)}
+.chip.Incorso{background:var(--s-prog-soft)} .chip.Incorso .dot{background:var(--s-prog)}
+.chip.Chiusa{background:var(--s-done-soft)} .chip.Chiusa .dot{background:var(--s-done)}
+.tag{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:0 6px;font-size:11.5px;margin:0 4px 3px 0;color:var(--ink-2)}
+.late{color:var(--danger);font-weight:600}
+.t-title{font-weight:550}
+.t-sub{color:var(--ink-3);font-size:12px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filters input,.filters select,.f input,.f select,.f textarea{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:7px 10px}
+.filters input[type=search]{min-width:240px}
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
+/* tooltip */
+#tip{position:fixed;z-index:100;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;border-radius:7px;font-size:12px;max-width:260px;opacity:0;transition:opacity .08s}
+/* drawer */
+#veil{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(780px,100vw);background:var(--bg);z-index:50;box-shadow:var(--shadow);display:flex;flex-direction:column}
+#drawer .dh{padding:14px 20px;border-bottom:1px solid var(--line);background:var(--surface);display:flex;gap:12px;align-items:center}
+#drawer .dh h2{margin:0;font-size:16px;flex:1;min-width:0}
+#drawer .db{overflow:auto;padding:18px 20px 40px;flex:1}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.sec h4{margin:0 0 10px;font-size:13px;font-weight:650}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.f label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-2)}
+.f label.full{grid-column:1/-1}
+.f input,.f select,.f textarea{color:var(--ink);width:100%}
+.f textarea{min-height:64px;resize:vertical}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips label{flex-direction:row;align-items:center;gap:5px;border:1px solid var(--line-2);border-radius:99px;padding:3px 10px;cursor:pointer;color:var(--ink);font-size:12.5px}
+.chips input{width:auto}
+.chips label:has(input:checked){background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.atts{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:8px}
+.att{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2);font-size:11.5px;position:relative}
+.att img,.att video{display:block;width:100%;height:96px;object-fit:cover;background:#000}
+.att a.file{display:flex;align-items:center;justify-content:center;height:96px;color:var(--accent);text-decoration:none;font-weight:600;font-size:22px}
+.att .cap{padding:4px 6px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att .x{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:0;border-radius:99px;width:20px;height:20px;cursor:pointer;line-height:1}
+.tl{border-left:2px solid var(--line-2);margin-left:6px;padding-left:16px}
+.ev{position:relative;margin-bottom:14px}
+.ev::before{content:"";position:absolute;left:-23px;top:5px;width:10px;height:10px;border-radius:99px;background:var(--accent);border:2px solid var(--bg)}
+.ev.stato::before{background:var(--s-done)}
+.ev .m{font-size:12px;color:var(--ink-3)}
+.ev .m b{color:var(--ink);font-weight:600}
+.ev .tx{white-space:pre-wrap;margin-top:2px}
+.ev .tp{display:inline-block;font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.4px;color:var(--accent);margin-right:6px}
+.note{font-size:12px;color:var(--ink-3)}
+.err{color:var(--danger);font-size:12.5px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:9px;z-index:120;display:none;font-size:13px}
+footer{color:var(--ink-3);font-size:11.5px;text-align:center;padding:24px}
+@media (max-width:640px){main{padding:14px 12px 60px}header.top{padding:10px 12px}.f{grid-template-columns:1fr}.hrow{grid-template-columns:96px 1fr 30px}}
+#login{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+#login form{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px;width:min(360px,100%);display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+#login h2{margin:0 0 4px;font-size:18px}
+#login input{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;width:100%}
+#set{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.4);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+#set .box{background:var(--bg);border-radius:14px;width:min(640px,100%);padding:18px 20px;box-shadow:var(--shadow)}
+#set .bh{display:flex;align-items:center;gap:12px;margin-bottom:12px}#set .bh h2{margin:0;font-size:16px;flex:1}
+.setrow{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.setrow input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:6px 9px}
+.setrow .note{width:118px;text-align:right}
+
+/* ===== Brand Edilkamin ===== */
+:root{--brand:#ed1b24;--accent:#d4121b;--accent-ink:#fff;--accent-soft:#fdeaeb;--bar:#2a78d6;--ink-dark:#1b1b1d}
+@media (prefers-color-scheme:dark){:root{--accent:#ff4b53;--accent-ink:#fff;--accent-soft:#3a1517;--bar:#3987e5}}
+body{background:var(--bg) radial-gradient(900px 340px at 100% -80px,rgba(237,27,36,.07),transparent) no-repeat}
+header.top{border-bottom:0;box-shadow:0 1px 0 var(--line),0 3px 0 var(--brand) inset;padding:12px 28px;gap:22px}
+.brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink)}
+.logo-wrap{display:inline-flex;background:#fff;border-radius:9px;padding:4px 9px;border:1px solid var(--line)}
+.logo-wrap img{height:34px;width:auto;display:block}
+.logo-wrap.big{padding:10px 16px;border:0;border-radius:12px;align-self:flex-start}.logo-wrap.big img{height:52px}
+.brand-t{font-size:19px;letter-spacing:.2px;font-weight:500;padding-left:14px;border-left:1px solid var(--line-2);line-height:1.1}
+.brand-t b{color:var(--brand);font-weight:800}
+.brand-t small{display:block;font-size:10.5px;color:var(--ink-3);font-weight:400;margin:2px 0 0}
+nav.tabs{background:var(--surface-2);padding:4px;border-radius:11px}
+nav.tabs button{border-radius:8px;padding:7px 16px}
+nav.tabs button[aria-selected=true]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.who{color:var(--ink-2);font-size:12.5px}
+.btn{border-radius:9px}.btn.primary{box-shadow:0 2px 8px rgba(212,18,27,.28)}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;padding:22px 26px;border-radius:18px;color:#fff;
+  background:radial-gradient(520px 220px at 92% -30%,rgba(237,27,36,.75),transparent 70%),radial-gradient(380px 180px at 8% 130%,rgba(255,140,40,.28),transparent 70%),linear-gradient(135deg,#19191b,#2a2a2e)}
+.hero .hh{font-size:22px;font-weight:650;letter-spacing:.2px}.hero .hs{color:#d6d6d6;margin-top:3px;font-size:13.5px}.hero .hs b{color:#fff}.hero .hl{color:#ffb4b7}
+.hero .btn.primary{background:var(--brand);border-color:var(--brand)}
+.kpi{border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);border-top:3px solid var(--line-2);transition:transform .12s,box-shadow .12s}
+.kpi[style]{border-top-color:var(--c)}.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.09)}
+.kpi .v{font-size:32px;letter-spacing:-.5px}
+.card,.sec{border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card h3{display:flex;align-items:center;gap:8px}.card h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brand)}
+.tablewrap{border-radius:14px}
+th{background:var(--surface-2);text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+tbody tr.click:hover{background:var(--accent-soft)}
+#drawer .dh{border-top:3px solid var(--brand)}
+footer{padding:28px}
+/* login */
+#login{background:radial-gradient(700px 420px at 15% 10%,rgba(237,27,36,.55),transparent 70%),radial-gradient(600px 400px at 95% 100%,rgba(255,140,40,.25),transparent 70%),linear-gradient(135deg,#131315,#27272b)}
+#login .lg-wrap{display:grid;grid-template-columns:1.1fr 1fr;width:min(880px,100%);background:var(--surface);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+#login .lg-side{background:linear-gradient(160deg,#1c1c1f,#2e2e33);color:#fff;padding:34px 32px;display:flex;flex-direction:column;gap:14px;justify-content:center}
+#login .lg-side h1{margin:6px 0 0;font-size:28px;font-weight:500}#login .lg-side h1 b{color:var(--brand);font-weight:800}
+#login .lg-side p{margin:0;color:#cfcfd3;line-height:1.5}
+#login .lg-side ul{margin:6px 0 0;padding:0;list-style:none;color:#e6e6e8;font-size:13px;display:flex;flex-direction:column;gap:7px}
+#login .lg-side li::before{content:"";display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--brand);margin-right:10px}
+#login form{background:transparent;border:0;box-shadow:none;border-radius:0;width:auto;padding:38px 34px;justify-content:center}
+#login form h2{font-size:22px}
+#login .lg-link{font-size:12.5px;color:var(--accent);text-decoration:none;align-self:flex-start}#login .lg-link:hover{text-decoration:underline}
+@media (max-width:760px){#login .lg-wrap{grid-template-columns:1fr}#login .lg-side{padding:22px}.brand-t{display:none}}
+</style>
+</head>
+<body>
+<div id="login"><div class="lg-wrap">
+  <div class="lg-side"><span class="logo-wrap big"><img src="logo.png" alt="Edilkamin Fire Technology"></span>
+    <h1><b>EK</b> TechBoard</h1><p>Le segnalazioni di qualità, dal service alla risoluzione: tutte tracciate, in un solo posto.</p>
+    <ul><li>Foto, video e bollettini tecnici</li><li>Riscontri di ogni ente, passo dopo passo</li><li>Tempi di gestione sempre sotto controllo</li></ul></div>
+  <form id="login-form"><h2>Accedi</h2><div class="note">Usa le credenziali aziendali.</div>
+    <input id="lg-mail" type="email" placeholder="Email" autocomplete="username" required>
+    <input id="lg-pw" type="password" placeholder="Password" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Accedi</button><a href="#" id="lg-forgot" class="lg-link">Password dimenticata?</a><div id="login-msg" class="note"></div></form>
+  <form id="pw-form" style="display:none"><h2 id="pw-title">Scegli la tua password</h2><div class="note" id="pw-note"></div>
+    <input id="pw1" type="password" placeholder="Nuova password (almeno 8 caratteri)" autocomplete="new-password" required minlength="8">
+    <input id="pw2" type="password" placeholder="Ripeti la nuova password" autocomplete="new-password" required minlength="8">
+    <button class="btn primary" type="submit">Salva e continua</button><div id="pw-msg" class="note"></div></form>
+</div></div>
+<header class="top">
+  <a class="brand" href="#" onclick="return false"><span class="logo-wrap"><img src="logo.png" alt="Edilkamin Fire Technology"></span><span class="brand-t"><b>EK</b> TechBoard<small id="ver"></small></span></a>
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-dash" aria-selected="true">Dashboard</button>
+    <button role="tab" id="tab-list" aria-selected="false">Segnalazioni</button>
+  </nav>
+  <div class="sp"></div>
+  <button class="btn" id="btn-set" title="Gestisci le liste (enti, segnalatori)">Impostazioni</button>
+  <span class="who hidden" id="who"></span><button class="btn hidden" id="btn-out" title="Esci">Esci</button>
+  <button class="btn" id="btn-csv" title="Copia tutte le segnalazioni come CSV (incollabile in Excel)">Copia CSV</button>
+  <button class="btn primary" id="btn-new">+ Nuova segnalazione</button>
+</header>
+
+<main>
+  <div class="status-line" id="status">Caricamento…</div>
+
+  <section id="dash">
+    <div class="hero" id="hero"></div>
+    <div class="filters">
+      <label class="note">Periodo di apertura&nbsp;
+        <select id="f-period">
+          <option value="all">Tutto</option>
+          <option value="90">Ultimi 90 giorni</option>
+          <option value="180">Ultimi 6 mesi</option>
+          <option value="365">Ultimi 12 mesi</option>
+        </select>
+      </label>
+      <label class="note">Brand&nbsp;<select id="f-dmarca"><option value="">Tutti</option></select></label>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="card"><h3>Stato delle segnalazioni</h3><div class="sub">Distribuzione attuale</div><div id="c-stato"></div></div>
+      <div class="card"><h3>Aperte e chiuse per mese</h3><div class="sub">Segnalazioni aperte e chiuse in ciascun mese</div><div id="c-mesi"></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Carico per ente incaricato</h3><div class="sub">Una segnalazione conta per ogni ente coinvolto</div><div id="c-enti"></div></div>
+      <div class="card"><h3>Tempo medio di gestione per ente</h3><div class="sub">Giorni da apertura a chiusura, solo segnalazioni chiuse</div><div id="c-tempi"></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Per brand</h3><div class="sub">Numero di segnalazioni</div><div id="c-marca"></div></div>
+      <div class="card"><h3>Per ente segnalatore</h3><div class="sub">Da dove arrivano le segnalazioni</div><div id="c-seg"></div></div>
+    </div>
+    <div class="card"><h3>Da attenzionare</h3><div class="sub">Segnalazioni non chiuse, dalle più vecchie</div><div id="c-old"></div></div>
+  </section>
+
+  <section id="list" class="hidden">
+    <div class="filters">
+      <input type="search" id="q" placeholder="Cerca per titolo, modello, matricola, testo…">
+      <select id="f-stato"><option value="">Tutti gli stati</option><option>Aperta</option><option>In corso</option><option>Chiusa</option></select>
+      <select id="f-ente"><option value="">Tutti gli enti</option></select>
+      <select id="f-marca"><option value="">Tutti i brand</option></select>
+      <select id="f-prio"><option value="">Ogni priorità</option><option>Critica</option><option>Alta</option><option>Media</option><option>Bassa</option></select>
+      <span class="note" id="count"></span>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>N°</th><th>Stato</th><th>Segnalazione</th><th>Enti incaricati</th><th>Segnalatore</th><th>Apertura</th><th>Giorni</th><th>Priorità</th><th>Allegati</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </section>
+</main>
+<footer>EK TechBoard · Edilkamin Fire Technology · versione <span id="ver2"></span></footer>
+
+<div id="veil" class="hidden"></div>
+<div id="set" class="hidden"></div>
+<aside id="drawer" class="hidden" aria-label="Dettaglio segnalazione"></aside>
+<div id="tip"></div>
+<div id="toast"></div>
+
+<script src="vendor/supabase.js"></script>
+<script>if (typeof supabase === "undefined") document.write('<script src="supabase.js"><\/script>');</script>
+<script src="config.js"></script>
+<script>
+/* Livello di accesso ai dati: Supabase (login, tabella docs, storage allegati) */
+(function(){
+  const bucket = "allegati";
+  const URLV = typeof SUPABASE_URL === "undefined" ? "" : String(SUPABASE_URL), KEYV = typeof SUPABASE_ANON_KEY === "undefined" ? "" : String(SUPABASE_ANON_KEY);
+  const cfgOk = !!(URLV && KEYV) && !/INSERISCI/.test(URLV + KEYV);
+  const login = document.getElementById("login"), msg = document.getElementById("login-msg");
+  let sb = null, profile = { nome:"", ruolo:"utente" }, myId = null;
+  let resolveAuth; const authReady = new Promise(r => resolveAuth = r);
+
+  const loginForm = document.getElementById("login-form"), pwForm = document.getElementById("pw-form"), pwMsg = document.getElementById("pw-msg");
+  let pendingSession = null, pwMode = "primo";
+  function showPw(mode, session, note){
+    pendingSession = session; pwMode = mode;
+    loginForm.style.display = "none"; pwForm.style.display = "flex"; login.style.display = "flex";
+    document.getElementById("pw-title").textContent = mode === "recupero" ? "Imposta una nuova password" : "Primo accesso: scegli la tua password";
+    document.getElementById("pw-note").textContent = note || (mode === "recupero" ? "Scegli la nuova password per il tuo account." : "Per sicurezza devi sostituire la password iniziale con una personale.");
+  }
+  async function afterLogin(session, skipCheck){
+    myId = session.user.id;
+    try { const r = await sb.from("profiles").select("nome,ruolo,deve_cambiare_password").eq("id", myId).maybeSingle(); if (r.data) profile = r.data; } catch(e){}
+    if (!skipCheck && profile.deve_cambiare_password) { showPw("primo", session); return; }
+    if (!profile.nome) profile.nome = (session.user.email || "").split("@")[0];
+    login.style.display = "none";
+    document.getElementById("btn-out").classList.remove("hidden");
+    const w = document.getElementById("who"); if (w) { w.textContent = profile.nome; w.classList.remove("hidden"); }
+    resolveAuth();
+  }
+  const fail = t => { msg.textContent = t; msg.className = "err"; };
+  window.addEventListener("error", ev => { if (!msg.textContent || msg.textContent === "Accesso…") fail("Errore: " + (ev.message || "sconosciuto")); });
+  (async () => {
+    if (!cfgOk) { fail("Configurazione mancante o non valida: apri config.js, inserisci URL e chiave tra virgolette semplici \" \" e salva."); return; }
+    if (typeof supabase === "undefined") { fail("Libreria non caricata: la cartella \"vendor\" con il file supabase.js deve stare accanto a index.html."); return; }
+    try {
+      let url = URLV.trim().replace(/\/+$/, "").replace(/\/(rest|auth)\/v1$/, "");
+      if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+      const hh = location.hash + location.search, recovering = /type=recovery/.test(hh), linkErr = /error_code=|error=access_denied/.test(hh);
+      sb = supabase.createClient(url, KEYV.trim(), { auth: { flowType: "implicit" } });
+      sb.auth.onAuthStateChange((ev, sess) => { if (ev === "PASSWORD_RECOVERY" && sess) showPw("recupero", sess); });
+      const r = await sb.auth.getSession();
+      if (r.data && r.data.session) { if (recovering) showPw("recupero", r.data.session); else afterLogin(r.data.session); }
+      else if (linkErr) fail("Il link per il recupero password non è valido o è scaduto: richiedine uno nuovo con “Password dimenticata?”.");
+    } catch (e) { sb = null; fail("Impossibile collegarsi: controlla SUPABASE_URL e SUPABASE_ANON_KEY (" + (e && e.message || e) + ")."); }
+  })();
+  document.getElementById("login-form").addEventListener("submit", async e => {
+    e.preventDefault(); if (!sb) { if (!msg.textContent) fail("Applicazione non configurata correttamente."); return; }
+    msg.textContent = "Accesso…"; msg.className = "note";
+    let r;
+    try { r = await sb.auth.signInWithPassword({ email: document.getElementById("lg-mail").value.trim(), password: document.getElementById("lg-pw").value }); }
+    catch (e) { fail("Connessione non riuscita: " + (e && e.message || e)); return; }
+    if (r.error || !r.data.session) {
+      const m = r.error && r.error.message || "";
+      fail(/invalid login|credentials/i.test(m) ? "Email o password non corretti." : /confirm/i.test(m) ? "Utente non confermato: in Supabase apri l'utente e conferma l'email." : "Accesso non riuscito: " + (m || "nessuna risposta dal server") + ".");
+      return;
+    }
+    afterLogin(r.data.session);
+  });
+  document.getElementById("lg-forgot").addEventListener("click", async e => {
+    e.preventDefault();
+    if (!sb) { fail("Applicazione non configurata correttamente."); return; }
+    const mail = document.getElementById("lg-mail").value.trim();
+    if (!mail) { fail("Scrivi prima la tua email nel campo qui sopra, poi premi “Password dimenticata?”."); return; }
+    if (location.protocol === "file:") { fail("Il recupero password funziona solo dal sito online, non aprendo il file dal PC."); return; }
+    msg.className = "note"; msg.textContent = "Invio in corso…";
+    let r; try { r = await sb.auth.resetPasswordForEmail(mail, { redirectTo: location.origin + location.pathname }); } catch (x) { fail("Connessione non riuscita."); return; }
+    if (r.error) fail(/rate|seconds|limit/i.test(r.error.message || "") ? "Hai già richiesto un'email da poco: attendi un minuto e riprova." : "Invio non riuscito: " + r.error.message);
+    else { msg.className = "note"; msg.textContent = "Se l'indirizzo è registrato, riceverai a breve un'email con il link per scegliere una nuova password."; }
+  });
+  pwForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const bad = t => { pwMsg.textContent = t; pwMsg.className = "err"; };
+    const p1 = document.getElementById("pw1").value, p2 = document.getElementById("pw2").value;
+    if (p1.length < 8) return bad("La password deve avere almeno 8 caratteri.");
+    if (p1 !== p2) return bad("Le due password non coincidono.");
+    pwMsg.className = "note"; pwMsg.textContent = "Salvataggio…";
+    const r = await sb.auth.updateUser({ password: p1 });
+    if (r.error) { const m = r.error.message || ""; return bad(/different|same/i.test(m) ? "Scegli una password diversa da quella attuale." : /weak|short|character/i.test(m) ? "Password troppo debole: usa almeno 8 caratteri, meglio con lettere e numeri." : "Impossibile salvare: " + m); }
+    const rr = await sb.rpc("password_cambiata");
+    if (rr.error) return bad("Password cambiata, ma non registrata (" + rr.error.message + "): esegui lo schema.sql aggiornato in Supabase.");
+    pwForm.style.display = "none"; loginForm.style.display = "flex";
+    document.getElementById("pw1").value = ""; document.getElementById("pw2").value = ""; pwMsg.textContent = "";
+    afterLogin(pendingSession, true);
+  });
+  document.getElementById("btn-out").addEventListener("click", async () => { try { await sb.auth.signOut(); } catch(e){} location.reload(); });
+
+  /* realtime: un solo canale, le liste si aggiornano quando cambia la loro collezione */
+  const listeners = new Set(); let channel = null;
+  function ensureChannel(){
+    if (channel) return;
+    channel = sb.channel("docs-all").on("postgres_changes", { event:"*", schema:"public", table:"docs" }, p => {
+      const c = (p.new && p.new.coll) || (p.old && p.old.coll); listeners.forEach(l => l(c));
+    }).subscribe();
+  }
+  function watch(coll, fetchFn, cb, err){
+    let dead = false, t = null;
+    const run = async () => { try { const s = await fetchFn(); if (!dead) cb(s); } catch(e) { if (!dead && err) err({ code:"unavailable", message:String(e && e.message || e) }); } };
+    const l = c => { if (c === coll) { clearTimeout(t); t = setTimeout(run, 250); } };
+    listeners.add(l); ensureChannel();
+    const iv = setInterval(run, 30000); run();
+    return () => { dead = true; listeners.delete(l); clearInterval(iv); clearTimeout(t); };
+  }
+  const split = p => { const a = p.split("/"); return { coll: a.slice(0, -1).join("/"), id: a[a.length - 1] }; };
+  const snap = (id, data) => ({ id, exists: true, data: () => data, metadata: {} });
+  async function fetchColl(coll, ord){
+    const r = await sb.from("docs").select("id,data").eq("coll", coll).limit(5000);
+    if (r.error) throw r.error;
+    let rows = r.data.map(x => snap(x.id, x.data));
+    if (ord) rows.sort((a, b) => { const x = a.data()[ord[0]], y = b.data()[ord[0]]; return (x > y ? 1 : x < y ? -1 : 0) * (ord[1] === "desc" ? -1 : 1); });
+    return { docs: rows, size: rows.length, empty: !rows.length };
+  }
+  function docRef(path){
+    const { coll, id } = split(path);
+    return {
+      id, path,
+      async get(){ const r = await sb.from("docs").select("data").eq("coll", coll).eq("id", id).maybeSingle(); if (r.error) throw r.error; return r.data ? snap(id, r.data.data) : { id, exists:false, data: () => undefined, metadata:{} }; },
+      async set(data){ const r = await sb.from("docs").upsert({ coll, id, data, updated_at: new Date().toISOString() }, { onConflict: "coll,id" }); if (r.error) throw r.error; },
+      async update(data){ const r = await sb.rpc("merge_doc", { p_coll: coll, p_id: id, p_data: data }); if (r.error) throw r.error; },
+      async delete(){ const r = await sb.from("docs").delete().eq("coll", coll).eq("id", id); if (r.error) throw r.error; },
+      async acquire(){ return { acquired: true }; },
+      onSnapshot(cb, err){ return watch(coll, async () => { const s = await this.get(); return s; }, cb, err); }
+    };
+  }
+  function collRef(path){
+    let ord = null;
+    const q = {
+      path,
+      orderBy(f, d){ ord = [f, d]; return q; },
+      get(){ return fetchColl(path, ord); },
+      onSnapshot(cb, err){ return watch(path, () => fetchColl(path, ord), cb, err); },
+      doc(id){ return docRef(path + "/" + (id || crypto.randomUUID())); },
+      async add(data){ const d = q.doc(); await d.set(data); return d; }
+    };
+    return q;
+  }
+  const dbApi = {
+    doc: docRef, collection: collRef,
+    async nextNumber(){ const r = await sb.rpc("next_numero"); if (r.error) throw r.error; return Number(r.data); }
+  };
+  const userApi = {
+    async id(){ return myId; },
+    async me(){ return { name: profile.nome }; },
+    async profiles(ids){
+      const r = await sb.from("profiles").select("id,nome").in("id", ids); const out = {};
+      (r.data || []).forEach(p => out[p.id] = { name: p.nome || "" }); ids.forEach(i => { if (!out[i]) out[i] = { name: "" }; });
+      return out;
+    },
+    canEdit: () => profile.ruolo === "admin", isOwner: () => profile.ruolo === "admin", can: () => true
+  };
+  const assetsApi = {
+    async upload(file){
+      const id = crypto.randomUUID();
+      const r = await sb.storage.from(bucket).upload(id, file, { contentType: file.type || "application/octet-stream" });
+      if (r.error) { const s = String(r.error.statusCode || r.error.status || ""); throw { code: s === "413" ? "too_large" : "upstream_error", message: r.error.message }; }
+      return { id, url: "", sizeBytes: file.size, contentType: file.type || "application/octet-stream" };
+    }
+  };
+  window.claude = { use: async n => { await authReady; return n === "db" ? dbApi : n === "user" ? userApi : n === "assets" ? assetsApi : null; } };
+
+  /* allegati privati: gli URL firmati si risolvono al momento della visualizzazione */
+  const urlCache = new Map();
+  function blobUrl(id){
+    if (!urlCache.has(id)) urlCache.set(id, sb.storage.from(bucket).createSignedUrl(id, 3600).then(r => r.data ? r.data.signedUrl : "").catch(() => ""));
+    return urlCache.get(id);
+  }
+  async function hydrate(){
+    for (const el of document.querySelectorAll("[data-bsrc]:not([data-done]),[data-bhref]:not([data-done])")) {
+      el.setAttribute("data-done", "1");
+      const id = el.dataset.bsrc || el.dataset.bhref, u = await blobUrl(id);
+      if (el.dataset.bsrc) el.src = u; else el.href = u;
+    }
+  }
+  let ht = null;
+  new MutationObserver(() => { clearTimeout(ht); ht = setTimeout(hydrate, 50); }).observe(document.documentElement, { childList: true, subtree: true });
+})();
+</script>
+<script>
+"use strict";
+const APP_VERSION = "1.4.1";
+document.getElementById("ver").textContent = "v" + APP_VERSION;
+document.getElementById("ver2").textContent = APP_VERSION;
+
+/* ---------- costanti ---------- */
+const DEF_ENTI = ["Service","Controllo Qualità","R&D","PM","Affidabilità Prodotto","Operation","Uff. Applicazioni","Marketing","Fornitore LINX","Altro"];
+const DEF_SEG = ["Service","Operation","Uff. Applicazioni","Rivenditore / Cliente","Produzione","Commerciale","Altro"];
+let ENTI = DEF_ENTI.slice(), SEGNALATORI = DEF_SEG.slice();
+const STATI = ["Aperta","In corso","Chiusa"];
+const PRIO = ["Bassa","Media","Alta","Critica"];
+const TIPI_EV = ["Nota","Riscontro","Presa in carico","Correzione in linea","Correzione sul campo","Bollettino tecnico"];
+const TIPI_CORR = ["In linea (produzione)","Sul campo","In linea e sul campo","Nessuna correzione necessaria"];
+const SC = {"Aperta":"var(--s-open)","In corso":"var(--s-prog)","Chiusa":"var(--s-done)"};
+const ACCEPT = "image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv";
+const cls = s => s.replace(/\s/g,"");
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DAY = 864e5;
+const todayStr = () => { const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const pd = s => s ? new Date(s.slice(0,10) + "T00:00:00") : null;
+const days = (a,b) => Math.max(0, Math.round((pd(b) - pd(a)) / DAY));
+const fdate = s => s ? s.slice(8,10)+"/"+s.slice(5,7)+"/"+s.slice(0,4) : "—";
+const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function toast(msg, ms=3200){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display="none",ms); }
+function fmtSize(b){ return b>1048576 ? (b/1048576).toFixed(1)+" MB" : Math.max(1,Math.round(b/1024))+" KB"; }
+
+/* tooltip */
+const tip = $("#tip");
+document.addEventListener("mousemove", e => {
+  const t = e.target.closest("[data-tip]");
+  if (!t) { tip.style.opacity = 0; return; }
+  tip.textContent = t.dataset.tip; tip.style.opacity = 1;
+  const x = Math.min(e.clientX + 12, innerWidth - 270); tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px";
+});
+
+/* ---------- stato applicazione ---------- */
+let db = null, assets = null, user = null, uid = "anon";
+let ALL = [];                 // segnalazioni
+let loaded = false;
+let drawer = null;            // {id|null, dirty, pendingFiles[], unsubEv}
+const names = {};             // id -> nome
+async function resolveNames(ids){
+  if (!user || !user.profiles) return;
+  const need = [...new Set(ids)].filter(i => i && i !== "import" && i !== "anon");
+  if (!need.length) return;
+  try { const ps = await user.profiles(need); for (const i of need) names[i] = (ps[i] && ps[i].name) || ""; } catch(e){}
+}
+const who = id => id === "import" ? "Import Excel" : (names[id] || "Utente");
+
+/* ---------- connessione dati ---------- */
+async function init(){
+  try { user = await claude.use("user"); } catch(e){}
+  try { db = await claude.use("db"); } catch(e){}
+  try { assets = await claude.use("assets"); } catch(e){}
+  if (user && user.id) { try { uid = (await user.id()) || "anon"; } catch(e){} }
+  if (user && user.me) { try { const m = await user.me(); if (m && m.name) names[uid] = m.name; } catch(e){} }
+  if (!db) { $("#status").textContent = "Archivio dati non disponibile: accedi con il tuo account per usare lo strumento."; return; }
+  const timer = setTimeout(() => { if (!loaded) $("#status").textContent = "Il caricamento sta richiedendo più del previsto…"; }, 10000);
+  db.doc("config/liste").onSnapshot(c => {
+    const d = c && c.exists ? c.data() : null;
+    ENTI = d && d.enti && d.enti.length ? d.enti.slice() : DEF_ENTI.slice();
+    SEGNALATORI = d && d.segnalatori && d.segnalatori.length ? d.segnalatori.slice() : DEF_SEG.slice();
+    refreshFilters(); renderSettings();
+    if (drawer && drawer.id && !drawer.dirty && !drawer.busy) renderDrawer();
+  }, () => {});
+  db.collection("segnalazioni").onSnapshot(snap => {
+    clearTimeout(timer); loaded = true;
+    ALL = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    $("#status").textContent = ALL.length ? "" : "Nessuna segnalazione ancora: crea la prima con “Nuova segnalazione”.";
+    refreshFilters(); render();
+    if (drawer && drawer.id) refreshDrawerDoc();
+  }, err => { clearTimeout(timer); $("#status").textContent = "Impossibile leggere i dati: " + (err && (err.message || err.code) || "errore sconosciuto"); });
+}
+
+/* ---------- metriche ---------- */
+function inPeriod(s){
+  const p = $("#f-period").value, m = $("#f-dmarca").value;
+  if (m && s.marca !== m) return false;
+  if (p !== "all" && days(s.dataApertura, todayStr()) > +p) return false;
+  return true;
+}
+const isLate = s => s.stato !== "Chiusa" && s.dataTarget && s.dataTarget < todayStr();
+const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+const fx = v => v == null ? "—" : (Math.round(v*10)/10).toString().replace(".",",");
+
+function hbars(rows, opts={}){
+  if (!rows.length) return '<div class="empty">Nessun dato</div>';
+  const max = Math.max(...rows.map(r => r.total));
+  return '<div class="hbars">' + rows.map(r => {
+    const segs = r.segs || [{v:r.total,c:"var(--bar)",l:r.label}];
+    return '<div class="hrow"><div class="n" title="'+esc(r.label)+'">'+esc(r.label)+'</div><div class="bar" style="width:'+Math.max(3,(r.total/max)*100)+'%">' +
+      segs.filter(s=>s.v>0).map(s=>'<div data-tip="'+esc(r.label+" · "+s.l+": "+fx(s.v)+(opts.unit||""))+'" style="flex:'+s.v+';background:'+s.c+'"></div>').join("") +
+      '</div><div class="t">'+fx(r.total)+(opts.unit?'<span class="t-sub"> '+opts.unit+'</span>':'')+'</div></div>';
+  }).join("") + '</div>';
+}
+/* la riga ha 3 colonne: la barra occupa la colonna centrale */
+function countBy(list, keyFn){
+  const m = new Map();
+  list.forEach(s => (keyFn(s) || ["—"]).forEach(k => { if(!m.has(k)) m.set(k,[]); m.get(k).push(s); }));
+  return m;
+}
+
+function renderDash(){
+  const L = ALL.filter(inPeriod);
+  const n = st => L.filter(s => s.stato === st).length;
+  const chiuse = L.filter(s => s.stato === "Chiusa" && s.dataChiusura);
+  const tGest = avg(chiuse.map(s => days(s.dataApertura, s.dataChiusura)));
+  const nonChiuse = L.filter(s => s.stato !== "Chiusa");
+  const eta = avg(nonChiuse.map(s => days(s.dataApertura, todayStr())));
+  const late = nonChiuse.filter(isLate).length;
+  const kp = (l,v,h,c) => '<div class="kpi"'+(c?' style="--c:'+c+'"':'')+'><div class="l">'+(c?'<span class="dot" style="background:'+c+'"></span>':'')+l+'</div><div class="v">'+v+'</div><div class="h">'+h+'</div></div>';
+  $("#kpis").innerHTML =
+    kp("Totale", L.length, "segnalazioni nel periodo") +
+    kp("Aperte", n("Aperta"), "da prendere in carico", SC["Aperta"]) +
+    kp("In corso", n("In corso"), "in lavorazione", SC["In corso"]) +
+    kp("Chiuse", n("Chiusa"), L.length ? Math.round(n("Chiusa")/L.length*100)+"% del totale" : "—", SC["Chiusa"]) +
+    kp("Tempo medio di gestione", fx(tGest)+'<small>giorni</small>', chiuse.length ? "su "+chiuse.length+" chiuse" : "nessuna chiusa con data") +
+    kp("Età media non chiuse", fx(eta)+'<small>giorni</small>', "aperte + in corso") +
+    kp("Oltre la data prevista", late, "non chiuse con scadenza superata");
+
+  // hero
+  const nome = (names[uid] || "").split(" ")[0], ora = new Date().getHours();
+  const naA = ALL.filter(x => x.stato === "Aperta").length, naP = ALL.filter(x => x.stato === "In corso").length, nl = ALL.filter(isLate).length;
+  $("#hero").innerHTML = '<div><div class="hh">'+(ora < 13 ? "Buongiorno" : ora < 18 ? "Buon pomeriggio" : "Buonasera")+(nome ? ", "+esc(nome) : "")+'</div><div class="hs"><b>'+naA+'</b> da prendere in carico · <b>'+naP+'</b> in lavorazione'+(nl ? ' · <b class="hl">'+nl+' oltre la data prevista</b>' : '')+'</div></div>';
+
+  // stato
+  const tot = L.length || 1;
+  $("#c-stato").innerHTML = L.length ?
+    '<div class="stack">' + STATI.map(st => n(st) ? '<div data-tip="'+st+": "+n(st)+'" style="flex:'+n(st)+';background:'+SC[st]+'"></div>' : "").join("") + '</div>' +
+    '<div class="legend">' + STATI.map(st => '<span><i class="dot" style="background:'+SC[st]+'"></i>'+st+' <b>'+n(st)+'</b> ('+Math.round(n(st)/tot*100)+'%)</span>').join("") + '</div>' +
+    '<div class="sub" style="margin:18px 0 8px">Non chiuse per priorità</div>' +
+    hbars(PRIO.slice().reverse().map(p => ({label:p, total:nonChiuse.filter(s => (s.priorita||"Media") === p).length})).filter(r => r.total))
+    : '<div class="empty">Nessun dato</div>';
+
+  // mesi
+  const ym = s => s.slice(0,7);
+  const opened = {}, closed = {};
+  L.forEach(s => { opened[ym(s.dataApertura)] = (opened[ym(s.dataApertura)]||0)+1; if (s.stato==="Chiusa" && s.dataChiusura) closed[ym(s.dataChiusura)] = (closed[ym(s.dataChiusura)]||0)+1; });
+  const keys = Object.keys({...opened, ...closed}).sort();
+  if (!keys.length) $("#c-mesi").innerHTML = '<div class="empty">Nessun dato</div>';
+  else {
+    // riempie i mesi vuoti
+    const all = []; let [y,m] = keys[0].split("-").map(Number); const [ye,me] = keys[keys.length-1].split("-").map(Number);
+    while (y < ye || (y === ye && m <= me)) { all.push(y+"-"+String(m).padStart(2,"0")); if (++m > 12) { m = 1; y++; } }
+    const mx = Math.max(1, ...all.map(k => Math.max(opened[k]||0, closed[k]||0)));
+    const W = 560, H = 190, pl = 26, pb = 22, pt = 8, bw = (W-pl)/all.length;
+    let svg = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Segnalazioni aperte e chiuse per mese">';
+    for (let i=0;i<=mx && i<=6;i += Math.ceil(mx/4)) { const yy = H-pb-(i/mx)*(H-pb-pt); svg += '<line x1="'+pl+'" x2="'+W+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)"/><text x="'+(pl-5)+'" y="'+(yy+4)+'" text-anchor="end" font-size="10" fill="var(--ink-3)">'+i+'</text>'; }
+    all.forEach((k,i) => {
+      const x0 = pl + i*bw, w = Math.min(14, bw*0.34);
+      [[opened[k]||0,"Aperte",SC["Aperta"],-w-1],[closed[k]||0,"Chiuse",SC["Chiusa"],1]].forEach(([v,l,c,dx]) => {
+        const h = (v/mx)*(H-pb-pt);
+        if (v) svg += '<path data-tip="'+MESI[+k.slice(5)-1]+' '+k.slice(0,4)+" · "+l+": "+v+'" d="M'+(x0+bw/2+dx)+' '+(H-pb)+'v'+(-Math.max(h-3,0))+'q0 -3 3 -3h'+(w-6)+'q3 0 3 3v'+Math.max(h-3,0)+'z" fill="'+c+'"/>';
+      });
+      if (i % Math.ceil(all.length / 8) === 0) svg += '<text x="'+(x0+bw/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--ink-3)">'+MESI[+k.slice(5)-1]+" "+k.slice(2,4)+'</text>';
+      svg += '<rect x="'+x0+'" y="'+pt+'" width="'+bw+'" height="'+(H-pb-pt)+'" fill="transparent" data-tip="'+MESI[+k.slice(5)-1]+' '+k.slice(0,4)+" — aperte: "+(opened[k]||0)+", chiuse: "+(closed[k]||0)+'"/>';
+    });
+    svg += '</svg><div class="legend"><span><i class="dot" style="background:'+SC["Aperta"]+'"></i>Aperte nel mese</span><span><i class="dot" style="background:'+SC["Chiusa"]+'"></i>Chiuse nel mese</span></div>';
+    $("#c-mesi").innerHTML = svg;
+  }
+
+  // enti per stato
+  const byEnte = countBy(L, s => s.enti && s.enti.length ? s.enti : null);
+  const rows = [...byEnte.entries()].map(([k,a]) => ({ label:k, total:a.length, segs: STATI.map(st => ({v:a.filter(s=>s.stato===st).length, c:SC[st], l:st})) })).sort((a,b)=>b.total-a.total);
+  $("#c-enti").innerHTML = hbars(rows) + '<div class="legend">'+STATI.map(st=>'<span><i class="dot" style="background:'+SC[st]+'"></i>'+st+'</span>').join("")+'</div>';
+
+  // tempi per ente
+  const tr = [...countBy(chiuse, s => s.enti && s.enti.length ? s.enti : null).entries()].map(([k,a]) => { const v = avg(a.map(s=>days(s.dataApertura,s.dataChiusura))); return {label:k,total:v,segs:[{v,c:"var(--bar)",l:"media giorni"}]}; }).sort((a,b)=>b.total-a.total);
+  $("#c-tempi").innerHTML = tr.length ? hbars(tr, {unit:"gg"}) : '<div class="empty">Ancora nessuna segnalazione chiusa con data di chiusura.</div>';
+
+  const simple = a => [...countBy(L, a).entries()].map(([k,v]) => ({label:k,total:v.length})).sort((x,y)=>y.total-x.total);
+  $("#c-marca").innerHTML = hbars(simple(s => [s.marca || "—"]));
+  $("#c-seg").innerHTML = hbars(simple(s => [s.segnalatore || "—"]));
+
+  // da attenzionare
+  const old = nonChiuse.slice().sort((a,b) => a.dataApertura.localeCompare(b.dataApertura)).slice(0,8);
+  $("#c-old").innerHTML = old.length ? '<table><thead><tr><th>N°</th><th>Stato</th><th>Segnalazione</th><th>Enti</th><th>Giorni aperta</th><th>Data prevista</th></tr></thead><tbody>' +
+    old.map(s => '<tr class="click" data-open="'+esc(s.id)+'"><td class="num">'+esc(s.n)+'</td><td>'+chip(s.stato)+'</td><td><span class="t-title">'+esc(s.titolo)+'</span><div class="t-sub">'+esc(s.marca)+' '+esc(s.modello)+'</div></td><td>'+tags(s.enti)+'</td><td>'+days(s.dataApertura,todayStr())+'</td><td class="'+(isLate(s)?'late':'')+'">'+fdate(s.dataTarget)+'</td></tr>').join("") + '</tbody></table>' : '<div class="empty">Tutto chiuso. Ottimo lavoro.</div>';
+}
+const chip = st => '<span class="chip '+cls(st)+'"><i class="dot"></i>'+esc(st)+'</span>';
+const tags = a => (a||[]).map(t => '<span class="tag">'+esc(t)+'</span>').join("");
+
+/* ---------- lista ---------- */
+function refreshFilters(){
+  const fill = (sel, vals, first) => { const el = $(sel), cur = el.value; el.innerHTML = '<option value="">'+first+'</option>' + vals.map(v=>'<option>'+esc(v)+'</option>').join(""); el.value = vals.includes(cur) ? cur : ""; };
+  const marche = [...new Set(ALL.map(s => s.marca).filter(Boolean))].sort();
+  fill("#f-marca", marche, "Tutti i brand"); fill("#f-dmarca", marche, "Tutti");
+  fill("#f-ente", [...new Set([...ENTI, ...ALL.flatMap(x => x.enti || [])])], "Tutti gli enti");
+}
+function renderList(){
+  const q = $("#q").value.trim().toLowerCase(), st = $("#f-stato").value, en = $("#f-ente").value, ma = $("#f-marca").value, pr = $("#f-prio").value;
+  const L = ALL.filter(s =>
+    (!st || s.stato === st) && (!en || (s.enti||[]).includes(en)) && (!ma || s.marca === ma) && (!pr || s.priorita === pr) &&
+    (!q || [s.n,s.titolo,s.marca,s.modello,s.nc,s.azione,s.avanzamento,s.matricole,s.bollettino,s.datiProduzione].join(" ").toLowerCase().includes(q))
+  ).sort((a,b) => (b.n||0) - (a.n||0));
+  $("#count").textContent = L.length + " di " + ALL.length;
+  $("#tbody").innerHTML = L.length ? L.map(s => {
+    const gg = s.stato === "Chiusa" && s.dataChiusura ? days(s.dataApertura, s.dataChiusura) : days(s.dataApertura, todayStr());
+    const na = (s.allegati||[]).length;
+    return '<tr class="click" data-open="'+esc(s.id)+'"><td class="num">'+esc(s.n)+'</td><td>'+chip(s.stato)+'</td>' +
+      '<td><span class="t-title">'+esc(s.titolo)+'</span><div class="t-sub">'+esc([s.marca,s.modello].filter(Boolean).join(" · "))+'</div></td>' +
+      '<td>'+tags(s.enti)+'</td><td>'+esc(s.segnalatore)+'</td><td>'+fdate(s.dataApertura)+'</td><td class="num '+(isLate(s)?'late':'')+'">'+gg+(s.stato==="Chiusa"?" (gestione)":"")+'</td><td>'+esc(s.priorita||"")+'</td><td class="num">'+(na?na:"")+'</td></tr>';
+  }).join("") : '<tr><td colspan="9" class="empty">Nessuna segnalazione corrisponde ai filtri.</td></tr>';
+}
+function render(){ renderDash(); renderList(); }
+
+/* ---------- tab ---------- */
+function showTab(t){
+  $("#dash").classList.toggle("hidden", t !== "dash"); $("#list").classList.toggle("hidden", t !== "list");
+  $("#tab-dash").setAttribute("aria-selected", t === "dash"); $("#tab-list").setAttribute("aria-selected", t === "list");
+  try { history.replaceState(null,"","#"+(t==="list"?"segnalazioni":"dashboard")); } catch(e){}
+}
+$("#tab-dash").onclick = () => showTab("dash"); $("#tab-list").onclick = () => showTab("list");
+["#f-period","#f-dmarca"].forEach(s => $(s).onchange = renderDash);
+["#q","#f-stato","#f-ente","#f-marca","#f-prio"].forEach(s => { $(s).oninput = renderList; $(s).onchange = renderList; });
+document.addEventListener("click", e => { if (e.target.id === "hero-new") { openDrawer(null); return; } const r = e.target.closest("[data-open]"); if (r) openDrawer(r.dataset.open); });
+$("#btn-new").onclick = () => openDrawer(null);
+$("#veil").onclick = closeDrawer;
+document.addEventListener("keydown", e => { if (e.key !== "Escape") return; if (!$("#set").classList.contains("hidden")) closeSettings(); else if (drawer) closeDrawer(); });
+
+$("#btn-csv").onclick = async () => {
+  const cols = [["n","N°"],["titolo","Riferimento dossier"],["marca","Brand"],["modello","Modello"],["nc","Non conformità"],["azione","Azione correttiva"],["segnalatore","Ente segnalatore"],["enti","Ente incaricato"],["avanzamento","Stato avanzamento"],["stato","Stato"],["priorita","Priorità"],["dataApertura","Data apertura"],["dataTarget","Data prevista"],["dataChiusura","Data chiusura"],["matricole","Matricole"],["datiProduzione","Date/lotti produzione"],["bollettino","Bollettino tecnico"],["closeTipo","Tipo correzione"],["closeNote","Nota di chiusura"]];
+  const q = v => '"' + String(Array.isArray(v) ? v.join(" / ") : (v ?? "")).replace(/"/g,'""').replace(/\r?\n/g," ") + '"';
+  const txt = cols.map(c=>q(c[1])).join("\t") + "\n" + ALL.slice().sort((a,b)=>a.n-b.n).map(s => cols.map(c=>q(s[c[0]])).join("\t")).join("\n");
+  try { await navigator.clipboard.writeText(txt); toast("CSV copiato: incollalo in Excel"); } catch(e){ toast("Copia non consentita dal browser"); }
+};
+
+/* ---------- drawer dettaglio ---------- */
+function getDoc(id){ return ALL.find(s => s.id === id); }
+function openDrawer(id){
+  if (drawer) closeDrawer(true);
+  drawer = { id, dirty:false, pending:[], events:[], unsub:null };
+  $("#veil").classList.remove("hidden"); $("#drawer").classList.remove("hidden");
+  if (id && db) {
+    drawer.unsub = db.collection("segnalazioni/"+id+"/eventi").orderBy("at","desc").onSnapshot(async snap => {
+      drawer.events = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      await resolveNames(drawer.events.map(e => e.by));
+      renderTimeline();
+    }, () => {});
+  }
+  renderDrawer();
+}
+function closeDrawer(silent){
+  if (drawer && drawer.dirty && !silent && !confirm("Ci sono modifiche non salvate. Chiudere comunque?")) return;
+  if (drawer && drawer.unsub) drawer.unsub();
+  drawer = null; $("#veil").classList.add("hidden"); $("#drawer").classList.add("hidden"); $("#drawer").innerHTML = "";
+}
+function refreshDrawerDoc(){
+  if (!drawer || !drawer.id) return;
+  if (!getDoc(drawer.id)) { closeDrawer(true); return; }
+  if (!drawer.dirty && !drawer.busy) renderDrawer(); else renderTimeline();
+}
+const opt = (list, cur, blank) => (blank?'<option value=""></option>':'') + list.map(v => '<option'+(v===cur?' selected':'')+'>'+esc(v)+'</option>').join("");
+
+function attHtml(a, removable){
+  const t = a.type || "", id = esc(a.id), n = (a.name || "").toLowerCase();
+  let inner;
+  if (t.startsWith("image/")) inner = '<a data-bhref="'+id+'" target="_blank" rel="noopener"><img data-bsrc="'+id+'" alt="'+esc(a.name)+'"></a>';
+  else if (t.startsWith("video/")) inner = '<video data-bsrc="'+id+'" controls preload="metadata"></video>';
+  else inner = '<a class="file" data-bhref="'+id+'" target="_blank" rel="noopener">'+(t==="application/pdf"?"PDF":/\.(docx?|xlsx?|pptx?)$/.test(n)?n.split(".").pop().toUpperCase():"FILE")+'</a>';
+  return '<div class="att">'+inner+'<div class="cap" title="'+esc(a.name)+'">'+esc(a.name)+'</div>'+(removable?'<button class="x" data-rm="'+id+'" title="Rimuovi">×</button>':'')+'</div>';
+}
+
+function renderDrawer(){
+  const isNew = !drawer.id, s = isNew ? { stato:"Aperta", priorita:"Media", dataApertura:todayStr(), enti:[], segnalatore:"Service", allegati:[] } : getDoc(drawer.id);
+  if (!s) return;
+  drawer.pending = drawer.pending || [];
+  const marche = [...new Set(ALL.map(x=>x.marca).filter(Boolean))];
+  $("#drawer").innerHTML =
+  '<div class="dh"><h2>'+(isNew ? "Nuova segnalazione" : "Segnalazione n° "+esc(s.n)+' '+chip(s.stato))+'</h2><button class="btn sm" id="d-close">Chiudi ✕</button></div>' +
+  '<div class="db">' +
+  '<div class="sec"><h4>Dati della segnalazione</h4><div class="f" id="form">' +
+    '<label class="full">Riferimento dossier / titolo *<input name="titolo" value="'+esc(s.titolo)+'"></label>' +
+    '<label>Brand<input name="marca" list="dl-marche" value="'+esc(s.marca)+'"><datalist id="dl-marche">'+marche.map(m=>'<option value="'+esc(m)+'">').join("")+'</datalist></label>' +
+    '<label>Modello<input name="modello" value="'+esc(s.modello)+'"></label>' +
+    '<label class="full">Non conformità riscontrata<textarea name="nc">'+esc(s.nc)+'</textarea></label>' +
+    '<label>Ente segnalatore<select name="segnalatore">'+opt([...new Set([...SEGNALATORI, ...(s.segnalatore ? [s.segnalatore] : [])])], s.segnalatore)+'</select></label>' +
+    '<label>Priorità<select name="priorita">'+opt(PRIO, s.priorita)+'</select></label>' +
+    '<label class="full">Enti incaricati<div class="chips" id="enti">'+[...new Set([...ENTI, ...(s.enti||[])])].map(e=>'<label><input type="checkbox" value="'+esc(e)+'"'+((s.enti||[]).includes(e)?' checked':'')+'>'+esc(e)+'</label>').join("")+'</div></label>' +
+    '<label>Data apertura<input type="date" name="dataApertura" value="'+esc(s.dataApertura)+'"></label>' +
+    '<label>Data prevista di risoluzione<input type="date" name="dataTarget" value="'+esc(s.dataTarget||"")+'"></label>' +
+    '<label class="full">Matricole interessate (una per riga o separate da virgola)<textarea name="matricole">'+esc(s.matricole)+'</textarea></label>' +
+    '<label>Date / lotti di produzione<input name="datiProduzione" value="'+esc(s.datiProduzione||"")+'" placeholder="es. sett. 25/2025, lotto 4412"></label>' +
+    '<label>Bollettino tecnico (codice / riferimento)<input name="bollettino" value="'+esc(s.bollettino||"")+'" placeholder="es. MED 25-180"></label>' +
+    '<label class="full">Azione correttiva<textarea name="azione">'+esc(s.azione)+'</textarea></label>' +
+    '<label class="full">Stato di avanzamento<textarea name="avanzamento">'+esc(s.avanzamento)+'</textarea></label>' +
+  '</div>' +
+  (isNew ? '<div style="margin-top:12px"><div class="note">Foto, video e documenti (opzionale)</div><input type="file" id="d-files" multiple accept="'+ACCEPT+'">'+(assets?'':'<div class="note">Il caricamento di file non è disponibile per il tuo account.</div>')+'</div>' : '') +
+  '<div class="actions"><button class="btn primary" id="d-save">'+(isNew?"Crea segnalazione":"Salva modifiche")+'</button><span class="note" id="d-msg"></span>' +
+  (!isNew && user && user.canEdit && user.canEdit() ? '<span class="sp"></span><button class="btn sm danger" id="d-del">Elimina</button>' : '') + '</div></div>' +
+  (isNew ? '' :
+    '<div class="sec"><h4>Workflow</h4><div class="note" style="margin-bottom:8px">Creata da '+esc(who(s.creatoDa))+' il '+fdate((s.creatoIl||"").slice(0,10))+(s.dataChiusura?' · chiusa il '+fdate(s.dataChiusura):'')+'</div>' +
+    '<div class="actions" style="margin-top:0">' +
+      (s.stato==="Aperta" ? '<button class="btn" id="w-take">Prendi in carico → In corso</button>' : '') +
+      (s.stato!=="Chiusa" ? '<button class="btn" id="w-close">Chiudi segnalazione…</button>' : '<button class="btn" id="w-reopen">Riapri</button>') +
+    '</div><div id="closebox" class="hidden" style="margin-top:12px"><div class="f">' +
+      '<label>Data chiusura<input type="date" id="cl-date" value="'+todayStr()+'"></label>' +
+      '<label>Correzione effettuata<select id="cl-tipo">'+opt(TIPI_CORR, TIPI_CORR[0])+'</select></label>' +
+      '<label class="full">Nota di chiusura (cosa è stato fatto, riferimento BT, ecc.) *<textarea id="cl-note"></textarea></label>' +
+    '</div><div class="actions"><button class="btn primary" id="cl-ok">Conferma chiusura</button><button class="btn" id="cl-no">Annulla</button></div></div>' +
+    (s.stato==="Chiusa" && (s.closeNote||s.closeTipo) ? '<div style="margin-top:10px"><b>Chiusura:</b> '+esc(s.closeTipo||"")+'<div class="ev"><div class="tx" style="white-space:pre-wrap">'+esc(s.closeNote||"")+'</div></div></div>' : '') +
+    '</div>' +
+    '<div class="sec"><h4>Allegati della segnalazione</h4><div class="note">Foto, video, PDF, documenti Office, bollettini tecnici. Max 50 MB per file.</div>' +
+      '<div class="atts" id="atts">'+(s.allegati||[]).map(a=>attHtml(a,true)).join("")+'</div>' +
+      (assets ? '<div class="actions"><input type="file" id="a-files" multiple accept="'+ACCEPT+'"><button class="btn sm" id="a-up">Carica</button><span class="note" id="a-msg"></span></div>' : '<div class="note" style="margin-top:8px">Il caricamento di file non è disponibile per il tuo account.</div>') +
+    '</div>' +
+    '<div class="sec"><h4>Riscontri e storico</h4>' +
+      '<div class="f"><label>Tipo<select id="e-tipo">'+opt(TIPI_EV,"Riscontro")+'</select></label><label>Per conto di (ente)<select id="e-ente">'+opt(ENTI, "", true)+'</select></label>' +
+      '<label class="full">Testo<textarea id="e-txt" placeholder="Riscontro, esito del test, azione svolta, indicazioni…"></textarea></label></div>' +
+      (assets ? '<div class="actions"><input type="file" id="e-files" multiple accept="'+ACCEPT+'"></div>' : '') +
+      '<div class="actions"><button class="btn primary" id="e-add">Aggiungi allo storico</button><span class="note" id="e-msg"></span></div>' +
+      '<div class="tl" id="tl" style="margin-top:16px"></div></div>') +
+  '</div>';
+  wireDrawer(isNew, s); if (!isNew) renderTimeline();
+}
+
+function readForm(){
+  const o = {};
+  document.querySelectorAll("#form [name]").forEach(el => o[el.name] = el.value.trim());
+  o.enti = [...document.querySelectorAll("#enti input:checked")].map(i => i.value);
+  return o;
+}
+function setMsg(id, t, bad){ const el = $(id); if (el) { el.textContent = t; el.className = bad ? "err" : "note"; } }
+
+function wireDrawer(isNew, s){
+  $("#d-close").onclick = () => closeDrawer();
+  $("#form").addEventListener("input", () => drawer.dirty = true);
+  $("#enti").addEventListener("change", () => drawer.dirty = true);
+  $("#d-save").onclick = () => isNew ? createTicket() : saveTicket(s);
+  const q = id => $(id);
+  if (q("#d-del")) q("#d-del").onclick = async () => { if (confirm("Eliminare definitivamente la segnalazione n° "+s.n+"?")) { try { await db.doc("segnalazioni/"+s.id).delete(); drawer.dirty=false; closeDrawer(true); toast("Segnalazione eliminata"); } catch(e){ toast("Non hai i permessi per eliminare"); } } };
+  if (isNew) return;
+  if (q("#w-take")) q("#w-take").onclick = () => changeStato(s, "In corso", "Presa in carico", "");
+  if (q("#w-reopen")) q("#w-reopen").onclick = () => changeStato(s, "In corso", "Riaperta", "", {dataChiusura:null});
+  if (q("#w-close")) q("#w-close").onclick = () => $("#closebox").classList.remove("hidden");
+  if (q("#cl-no")) q("#cl-no").onclick = () => $("#closebox").classList.add("hidden");
+  if (q("#cl-ok")) q("#cl-ok").onclick = () => {
+    const note = $("#cl-note").value.trim(); if (!note) { toast("Inserisci la nota di chiusura"); return; }
+    const tipo = $("#cl-tipo").value, dt = $("#cl-date").value || todayStr();
+    changeStato(s, "Chiusa", "Chiusura", tipo + " — " + note, { dataChiusura: dt, closeNote: note, closeTipo: tipo });
+  };
+  document.querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => {
+    if (!confirm("Rimuovere questo allegato dalla segnalazione?")) return;
+    try { await db.doc("segnalazioni/"+s.id).update({ allegati: (s.allegati||[]).filter(a => a.id !== b.dataset.rm), aggiornatoIl: new Date().toISOString() }); } catch(e){ toast("Rimozione non riuscita"); }
+  });
+  if (q("#a-up")) q("#a-up").onclick = async () => {
+    const files = [...$("#a-files").files]; if (!files.length) { setMsg("#a-msg","Scegli uno o più file", true); return; }
+    drawer.busy = true;
+    const up = await uploadFiles(files, m => setMsg("#a-msg", m));
+    drawer.busy = false;
+    if (up.length) { try { await db.doc("segnalazioni/"+s.id).update({ allegati: [...(getDoc(s.id).allegati||[]), ...up], aggiornatoIl: new Date().toISOString() }); toast(up.length+" file caricati"); } catch(e){ toast("Salvataggio allegati non riuscito"); } }
+    if (drawer) refreshDrawerDoc();
+  };
+  q("#e-add").onclick = async () => {
+    const txt = $("#e-txt").value.trim(), files = q("#e-files") ? [...$("#e-files").files] : [];
+    if (!txt && !files.length) { setMsg("#e-msg","Scrivi un testo o allega un file", true); return; }
+    drawer.busy = true; $("#e-add").disabled = true;
+    const up = files.length ? await uploadFiles(files, m => setMsg("#e-msg", m)) : [];
+    try {
+      await db.collection("segnalazioni/"+s.id+"/eventi").add({ tipo: $("#e-tipo").value, ente: $("#e-ente").value, testo: txt, allegati: up, by: uid, at: new Date().toISOString() });
+      await db.doc("segnalazioni/"+s.id).update({ aggiornatoIl: new Date().toISOString() });
+      $("#e-txt").value = ""; if (q("#e-files")) $("#e-files").value = ""; setMsg("#e-msg","Aggiunto");
+    } catch(e){ setMsg("#e-msg","Non è stato possibile salvare", true); }
+    drawer.busy = false; $("#e-add").disabled = false;
+  };
+}
+
+async function uploadFiles(files, say){
+  if (!assets) { toast("Caricamento file non disponibile"); return []; }
+  const out = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i]; say("Caricamento "+(i+1)+"/"+files.length+": "+f.name+"…");
+    try {
+      const r = await assets.upload(f);
+      out.push({ id: r.id, name: f.name, type: r.contentType, size: r.sizeBytes, by: uid, at: new Date().toISOString() });
+    } catch(e) {
+      const c = e && e.code;
+      say(f.name+": "+(c==="too_large"?"file troppo grande (max 50 MB)":c==="unsupported_type"?"formato non supportato":c==="quota_or_state"?"spazio esaurito":"caricamento non riuscito"));
+      await sleep(1500);
+    }
+  }
+  say(out.length ? out.length+" file caricati" : "");
+  return out;
+}
+
+async function nextNumber(){
+  if (db.nextNumber) { try { return await db.nextNumber(); } catch(e){} }
+  const ref = db.doc("meta/counter"), max = Math.max(0, ...ALL.map(s => s.n || 0));
+  for (let i = 0; i < 8; i++) {
+    try {
+      const r = await ref.acquire({ holder: uid + ":" + Math.random().toString(36).slice(2,7), ttlMs: 6000 });
+      if (r.acquired) { const g = await ref.get(); const cur = Math.max(g.exists ? (g.data().next||1) : 1, max + 1); await ref.set({ next: cur + 1 }); return cur; }
+    } catch(e) { break; }
+    await sleep(500);
+  }
+  return max + 1;
+}
+
+async function createTicket(){
+  const f = readForm(); if (!f.titolo) { setMsg("#d-msg","Il titolo è obbligatorio", true); return; }
+  $("#d-save").disabled = true; setMsg("#d-msg","Salvataggio…");
+  try {
+    const files = $("#d-files") ? [...$("#d-files").files] : [];
+    const up = files.length ? await uploadFiles(files, m => setMsg("#d-msg", m)) : [];
+    const n = await nextNumber(), now = new Date().toISOString();
+    const doc = { n, ...f, dataTarget: f.dataTarget || null, dataApertura: f.dataApertura || todayStr(), stato:"Aperta", allegati: up, creatoDa: uid, creatoIl: now, aggiornatoIl: now };
+    await db.doc("segnalazioni/s"+n).set(doc);
+    await db.collection("segnalazioni/s"+n+"/eventi").add({ tipo:"Apertura", testo:"Segnalazione aperta", allegati:[], by: uid, at: now });
+    drawer.dirty = false; closeDrawer(true); toast("Segnalazione n° "+n+" creata"); showTab("list");
+  } catch(e) { $("#d-save").disabled = false; setMsg("#d-msg","Salvataggio non riuscito: " + (e && e.code === "invalid_argument" ? "non hai i permessi di scrittura" : "riprova"), true); }
+}
+async function saveTicket(s){
+  const f = readForm(); if (!f.titolo) { setMsg("#d-msg","Il titolo è obbligatorio", true); return; }
+  $("#d-save").disabled = true;
+  try { await db.doc("segnalazioni/"+s.id).update({ ...f, dataTarget: f.dataTarget || null, aggiornatoIl: new Date().toISOString() }); drawer.dirty = false; toast("Modifiche salvate"); renderDrawer(); }
+  catch(e) { $("#d-save").disabled = false; setMsg("#d-msg","Salvataggio non riuscito", true); }
+}
+async function changeStato(s, nuovo, tipo, testo, extra){
+  try {
+    const now = new Date().toISOString();
+    await db.doc("segnalazioni/"+s.id).update({ stato: nuovo, aggiornatoIl: now, ...(extra||{}) });
+    await db.collection("segnalazioni/"+s.id+"/eventi").add({ tipo, testo: testo || (tipo + " (stato: " + nuovo + ")"), statoA: nuovo, allegati:[], by: uid, at: now });
+    toast("Stato: " + nuovo);
+  } catch(e) { toast("Operazione non riuscita (permessi?)"); }
+}
+
+function renderTimeline(){
+  const el = $("#tl"); if (!el || !drawer) return;
+  const ev = drawer.events || [];
+  el.innerHTML = ev.length ? ev.map(e =>
+    '<div class="ev'+(e.statoA?' stato':'')+'"><div class="m"><span class="tp">'+esc(e.tipo)+'</span><b>'+esc(who(e.by))+'</b>'+(e.ente?' · '+esc(e.ente):'')+' · '+esc(new Date(e.at).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}))+'</div>' +
+    (e.testo?'<div class="tx">'+esc(e.testo)+'</div>':'') + ((e.allegati||[]).length ? '<div class="atts">'+e.allegati.map(a=>attHtml(a,false)).join("")+'</div>' : '') + '</div>'
+  ).join("") : '<div class="empty">Nessun riscontro registrato.</div>';
+}
+
+/* ---------- impostazioni: liste enti ---------- */
+const LISTE = { enti:"Enti incaricati", segnalatori:"Enti segnalatori" };
+const arr = k => k === "enti" ? ENTI : SEGNALATORI;
+const usedBy = (k, v) => ALL.filter(s => k === "enti" ? (s.enti||[]).includes(v) : s.segnalatore === v);
+const canAdmin = () => !!(user && user.canEdit && user.canEdit());
+async function saveListe(){ try { await db.doc("config/liste").set({ enti: ENTI, segnalatori: SEGNALATORI }); } catch(e){ toast("Salvataggio non riuscito: servono i permessi"); } }
+function openSettings(){ $("#set").classList.remove("hidden"); renderSettings(); }
+function closeSettings(){ $("#set").classList.add("hidden"); }
+function renderSettings(){
+  const el = $("#set"); if (!el || el.classList.contains("hidden")) return;
+  const can = canAdmin();
+  el.innerHTML = '<div class="box"><div class="bh"><h2>Impostazioni</h2><button class="btn sm" id="set-close">Chiudi ✕</button></div>' +
+    (can ? '' : '<div class="note" style="margin-bottom:10px">Solo gli amministratori possono modificare le liste.</div>') +
+    Object.keys(LISTE).map(k => '<div class="sec"><h4>'+LISTE[k]+'</h4>' +
+      arr(k).map((v,i) => '<div class="setrow"><input data-k="'+k+'" data-i="'+i+'" value="'+esc(v)+'"'+(can?'':' disabled')+'><span class="note">'+usedBy(k,v).length+' segnalazioni</span>'+(can?'<button class="btn sm danger" data-del="'+k+':'+i+'">Elimina</button>':'')+'</div>').join("") +
+      (can ? '<div class="setrow"><input id="new-'+k+'" placeholder="Nuovo elemento…"><button class="btn sm primary" data-add="'+k+'">Aggiungi</button></div>' : '') + '</div>').join("") +
+    '<div class="note">Rinominando un elemento, il nuovo nome viene applicato anche alle segnalazioni esistenti. Eliminandolo, resta sulle segnalazioni già presenti ma non è più selezionabile per quelle nuove.</div></div>';
+}
+$("#btn-set").onclick = openSettings;
+$("#set").addEventListener("click", async e => {
+  if (e.target.id === "set" || e.target.id === "set-close") { closeSettings(); return; }
+  const add = e.target.closest("[data-add]"), del = e.target.closest("[data-del]");
+  if (add) {
+    const k = add.dataset.add, inp = $("#new-"+k), v = inp.value.trim();
+    if (!v) return;
+    if (arr(k).some(x => x.toLowerCase() === v.toLowerCase())) { toast("Esiste già"); return; }
+    arr(k).push(v); renderSettings(); refreshFilters(); await saveListe();
+  } else if (del) {
+    const [k, i] = del.dataset.del.split(":"), v = arr(k)[+i], n = usedBy(k, v).length;
+    if (n && !confirm("“"+v+"” è usato in "+n+" segnalazioni: resterà su quelle esistenti ma non sarà più selezionabile per le nuove. Eliminare?")) return;
+    if (!n && !confirm("Eliminare “"+v+"”?")) return;
+    arr(k).splice(+i, 1); renderSettings(); refreshFilters(); await saveListe();
+  }
+});
+$("#set").addEventListener("change", async e => {
+  const inp = e.target.closest("input[data-k]"); if (!inp) return;
+  const k = inp.dataset.k, i = +inp.dataset.i, old = arr(k)[i], nv = inp.value.trim();
+  if (!nv || nv === old) { inp.value = old; return; }
+  if (arr(k).some((x, j) => j !== i && x.toLowerCase() === nv.toLowerCase())) { toast("Esiste già"); inp.value = old; return; }
+  const used = usedBy(k, old);
+  if (used.length && !confirm("Rinominare “"+old+"” in “"+nv+"” anche in "+used.length+" segnalazioni?")) { inp.value = old; return; }
+  arr(k)[i] = nv; renderSettings();
+  try {
+    for (const t of used) await db.doc("segnalazioni/"+t.id).update(k === "enti" ? { enti: (t.enti||[]).map(x => x === old ? nv : x) } : { segnalatore: nv });
+    await saveListe(); toast("Rinominato");
+  } catch(err) { toast("Rinomina non riuscita"); }
+});
+
+/* ---------- avvio ---------- */
+if (location.hash === "#segnalazioni") showTab("list");
+init();
+</script>
+</body>
+</html>
